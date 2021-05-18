@@ -11,7 +11,7 @@ io.on('connection', (client) => {
         if (!data.nombre || !data.sala) {
             return callback({
                 error: true,
-                mensaje: 'El nombre es obligatorio'
+                mensaje: 'El nombre y sala son obligatorio'
             });
         }
         client.join(data.sala);
@@ -19,13 +19,16 @@ io.on('connection', (client) => {
         usuarios.agregarPersonas(client.id, data.nombre, data.sala);
 
         client.broadcast.to(data.sala).emit('listaPersonas', usuarios.getPersonasPorSala(data.sala));
+        client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Administrador', `${data.nombre} se unió`));
         callback(usuarios.getPersonasPorSala(data.sala));
+
     });
 
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         let persona = usuarios.getPersona(client.id);
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
         client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
+        callback(mensaje);
 
     });
 
